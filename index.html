@@ -201,20 +201,16 @@
             document.getElementById('adminCodeInput').value = '';
         }
 
-        function closeAdminCodeModal() {
-            document.getElementById('adminCodeModal').classList.remove('active');
-        }
-
-        function checkAdminCode() {
-            const code = document.getElementById('adminCodeInput').value.trim();
-            if (code === ADMIN_PASSWORD) {
-                closeAdminCodeModal();
-                window.location.href = 'index2.html';
-            } else {
-                alert('❌ Неверный код!');
-                document.getElementById('adminCodeInput').value = '';
-            }
-        }
+       function checkAdminCode() {
+    const code = document.getElementById('adminCodeInput').value.trim();
+    if (code === '1111') {
+        closeAdminCodeModal();
+        window.location.href = 'admin.html';
+    } else {
+        alert('❌ Неверный код!');
+        document.getElementById('adminCodeInput').value = '';
+    }
+}
 
         function copyIP() {
             const ip = document.getElementById('serverIp').innerText;
