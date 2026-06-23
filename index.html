@@ -1,198 +1,186 @@
-<script>
-    // ===== ГЛОБАЛЬНЫЕ КОНСТАНТАНТЫ =====
-    const DONATE_ID = '1508516';
-    const SERVER_IP = 'mc-latysTime.ru';
-    const ADMIN_PASSWORD = 'admin123';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LatysTime — Магазин</title>
+    <style>
+        /* ===== СТИЛИ СТРАНИЦЫ ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        
+        body { 
+            background-color: #0b0a0e; 
+            color: #f0e6d3; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background-image: radial-gradient(circle at 30% 20%, #1f1033 0%, #0b0a0e 85%); 
+            padding: 20px 10px; 
+        }
 
-    let selectedProduct = null;
+        .container { max-width: 1100px; width: 100%; }
 
-    // ===== БАЗОВЫЕ НАБОРЫ ДАННЫХ ДЛЯ ВИТРИНЫ =====
-    const defaultPrivileges = [
-        { id: 1, name: 'Элита', price: 250 },
-        { id: 2, name: 'Титан', price: 300 },
-        { id: 3, name: 'Принц', price: 600 },
-        { id: 4, name: 'Князь', price: 900 },
-        { id: 5, name: 'Герцог', price: 1700 }
-    ];
+        .glass-card { 
+            background: #120e1c; 
+            border: 1px solid rgba(255, 165, 0, 0.15); 
+            border-radius: 40px; 
+            padding: 45px 35px; 
+            margin-bottom: 35px; 
+        }
 
-    const defaultServices = [
-        { id: 6, name: 'Кейс с токенами', price: 15 },
-        { id: 7, name: 'Монетный ключ', price: 10 },
-        { id: 8, name: 'Размут', price: 80 },
-        { id: 9, name: 'Разбан', price: 150 },
-        { id: 10, name: 'Восстановление прав', price: 400 }
-    ];
+        h1 { 
+            font-size: 48px; 
+            font-weight: 900; 
+            text-align: center; 
+            background: linear-gradient(135deg, #ffab40, #ff6f00, #b388ff); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            color: #ffab40;
+            margin-bottom: 20px; 
+        }
 
-    // Загрузка списков товаров из локального хранилища браузера или из дефолтных массивов
-    let privileges = JSON.parse(localStorage.getItem('p_list')) || defaultPrivileges;
-    let services = JSON.parse(localStorage.getItem('s_list')) || defaultServices;
+        .section-title { 
+            font-size: 28px; 
+            font-weight: 700; 
+            color: #ffcc80; 
+            text-align: center; 
+            border-bottom: 2px solid rgba(255, 165, 0, 0.15); 
+            padding-bottom: 12px; 
+            margin-bottom: 25px; 
+        }
 
-    // ===== РЕНДЕРИНГ ИНТЕРФЕЙСА ВИТРИНЫ =====
-    function createCard(item, cat) {
-        return `
-            <div class="product-card">
-                <div class="admin-controls">
-                    <button class="admin-badge edit" onclick="editItem(${item.id}, '${cat}')" title="Редактировать">✏️</button>
-                    <button class="admin-badge del" onclick="deleteItem(${item.id}, '${cat}')" title="Удалить">×</button>
-                </div>
-                <div class="name">${item.name}</div>
-                <div class="price">${item.price} ₽</div>
-                <button class="btn-buy" onclick="openModal('${item.name}', ${item.price})">Купить</button>
+        .ip-block { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin: 15px 0 10px; }
+        .ip-address { background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 165, 0, 0.2); border-radius: 60px; padding: 14px 30px; font-size: 22px; font-weight: 700; color: #ffcc80; }
+        
+        .btn-copy { 
+            background: linear-gradient(145deg, #ff8a65, #e65100); 
+            border: none; padding: 14px 38px; border-radius: 60px; 
+            font-size: 18px; font-weight: 800; color: #0b0a0e; 
+            cursor: pointer; text-transform: uppercase; transition: transform 0.2s;
+        }
+        .btn-copy:hover { transform: scale(1.02); }
+
+        .online-block { display: flex; justify-content: center; align-items: center; gap: 18px; background: rgba(255, 255, 255, 0.02); border-radius: 60px; padding: 12px 28px; margin: 20px 0 5px; border: 1px solid rgba(255, 165, 0, 0.06); }
+        .online-dot { width: 14px; height: 14px; background: #66bb6a; border-radius: 50%; animation: pulse 1.6s ease-in-out infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.4); opacity: 1; } 100% { transform: scale(1); opacity: 0.6; } }
+        .online-number { font-size: 32px; font-weight: 800; color: #66bb6a; }
+        .online-label { font-size: 15px; color: #9575cd; letter-spacing: 1px; }
+
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 22px; }
+        
+        .product-card { 
+            background: rgba(255, 255, 255, 0.02); 
+            border: 1px solid rgba(255, 165, 0, 0.08); 
+            border-radius: 24px; padding: 22px 16px; 
+            text-align: center; transition: 0.3s; 
+            display: flex; flex-direction: column; align-items: center; 
+            position: relative;
+        }
+        .product-card:hover { transform: translateY(-8px); border-color: #b388ff; }
+        .product-card .name { font-size: 22px; font-weight: 800; color: #ffe0b2; margin-bottom: 8px; }
+        .product-card .price { font-size: 22px; font-weight: 700; color: #b388ff; margin-bottom: 16px; }
+        
+        .btn-buy { 
+            background: transparent; border: 2px solid #b388ff; color: #b388ff; 
+            padding: 10px 28px; border-radius: 40px; font-size: 15px; font-weight: 700; 
+            cursor: pointer; transition: 0.25s; text-transform: uppercase; width: 100%; max-width: 160px; 
+        }
+        .btn-buy:hover { background: #b388ff; color: #0b0a0e; }
+
+        .admin-controls { position: absolute; top: 8px; right: 8px; display: none; gap: 5px; }
+        body.admin-mode .admin-controls { display: flex; }
+        .admin-badge { border: none; width: 26px; height: 26px; border-radius: 50%; color: #fff; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .admin-badge.del { background: #ef4444; }
+        .admin-badge.edit { background: #3b82f6; }
+
+        .admin-section { display: none; border: 2px dashed #b388ff !important; background: rgba(25, 15, 45, 0.9) !important; }
+        .admin-section.active { display: block; }
+        .admin-form { display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; }
+        
+        .admin-form input, .admin-form select, .modal input { 
+            width: 100%; padding: 14px 18px; border-radius: 50px; 
+            border: 1px solid rgba(255, 165, 0, 0.2); background: rgba(255, 255, 255, 0.05); 
+            color: #fff; font-size: 18px; outline: none; margin-bottom: 16px; 
+        }
+        .admin-form select option { background: #0b0a0e; color: #ffe0b2; }
+
+        .btn-admin-submit { background: #b388ff; color: #0b0a0e; padding: 14px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer; text-transform: uppercase; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: #120e1c; border: 1px solid rgba(255, 165, 0, 0.2); border-radius: 30px; padding: 40px 35px; max-width: 420px; width: 90%; text-align: center; }
+        .modal h2 { color: #ffcc80; font-size: 28px; margin-bottom: 8px; }
+        .modal .product-name { color: #b388ff; font-size: 18px; }
+        .modal .product-price { color: #ffab40; font-size: 26px; font-weight: 700; margin: 10px 0 20px; }
+        
+        .modal-buttons { display: flex; gap: 12px; }
+        .modal-buttons button { flex: 1; padding: 14px 20px; border-radius: 50px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; text-transform: uppercase; }
+        .btn-confirm { background: linear-gradient(145deg, #ff8a65, #e65100); color: #0b0a0e; }
+        .btn-cancel { background: transparent; border: 2px solid #4a3f5e !important; color: #9575cd; }
+
+        .notification { position: fixed; top: 30px; right: 30px; z-index: 2000; background: #120e1c; border: 2px solid #66bb6a; border-radius: 20px; padding: 20px 30px; display: none; align-items: center; gap: 15px; }
+        .notification.show { display: flex; }
+        .notification .text { font-size: 22px; font-weight: 800; color: #66bb6a; }
+
+        .footer { text-align: center; color: #4a3f5e; font-size: 14px; padding: 15px 0; border-top: 1px solid rgba(255, 255, 255, 0.03); margin-top: 10px; }
+        .admin-link { color: #4a3f5e; text-decoration: none; cursor: pointer; margin-left: 10px; }
+
+        @media(max-width:700px){ h1{font-size:34px;} .glass-card{padding:28px 16px;} .ip-address{font-size:16px;padding:12px 18px;} .btn-copy{font-size:15px;padding:12px 22px;} .shop-grid{grid-template-columns: repeat(2, 1fr); gap:12px;} .product-card{padding:16px 10px;} .btn-buy{font-size:13px;padding:8px 14px;} .modal-buttons{flex-direction:column;} }
+    </style>
+</head>
+<body>
+
+    <!-- Окно покупки -->
+    <div class="modal-overlay" id="modalOverlay" onclick="if(event.target == this) closeModal()">
+        <div class="modal">
+            <h2>💎 Покупка</h2>
+            <div class="product-name" id="modalProductName">Привилегия</div>
+            <div class="product-price" id="modalProductPrice">0 ₽</div>
+            <input type="text" id="nicknameInput" placeholder="Введите ваш ник" maxlength="16" autocomplete="off" />
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+                <button class="btn-confirm" onclick="confirmPurchase()">Оплатить</button>
             </div>
-        `;
-    }
+        </div>
+    </div>
 
-    function render() {
-        document.getElementById('privilegesList').innerHTML = privileges.map(p => createCard(p, 'privileges')).join('');
-        document.getElementById('servicesList').innerHTML = services.map(s => createCard(s, 'services')).join('');
-    }
+    <!-- Уведомление -->
+    <div class="notification" id="notification">
+        <span>✅</span>
+        <span class="text">УСПЕШНО!</span>
+    </div>
 
-    // ===== УПРАВЛЕНИЕ АДМИН-ПАНЕЛЬЮ =====
-    function checkAdminPassword() {
-        const pass = prompt('Введите пароль администратора:');
-        if (pass === ADMIN_PASSWORD) {
-            toggleAdminMode(true);
-        } else if (pass !== null) {
-            alert('Доступ отклонен: введён неверный пароль.');
-        }
-    }
+    <div class="container">
+        <!-- Главный Блок -->
+        <div class="glass-card">
+            <h1>⚡ LatysTime</h1>
+            <div class="ip-block">
+                <div class="ip-address" id="serverIp">mc-latysTime.ru</div>
+                <button class="btn-copy" onclick="copyIP()">📋 Копировать IP</button>
+            </div>
+            <div class="online-block">
+                <div class="online-dot"></div>
+                <div class="online-number" id="onlineCount">0</div>
+                <div class="online-label">игроков онлайн</div>
+            </div>
+        </div>
 
-    function toggleAdminMode(show) {
-        const panel = document.getElementById('adminPanel');
-        if (show) {
-            panel.classList.add('active');
-            document.body.classList.add('admin-mode');
-            panel.scrollIntoView({ behavior: 'smooth' });
-        } else {
-            panel.classList.remove('active');
-            document.body.classList.remove('admin-mode');
-        }
-    }
+        <!-- Консоль админа -->
+        <div class="glass-card admin-section" id="adminPanel">
+            <div class="section-title">⚙️ Панель администратора</div>
+            <div class="admin-form">
+                <input type="hidden" id="editId" value="" />
+                <input type="text" id="newProdName" placeholder="Название товара" />
+                <input type="number" id="newProdPrice" placeholder="Цена в рублях" min="1" />
+                <select id="newProdCategory">
+                    <option value="privileges">Категория: Привилегии</option>
+                    <option value="services">Категория: Услуги и товары</option>
+                </select>
+                <button class="btn-admin-submit" id="submitFormBtn" onclick="saveForm()">Сохранить товар</button>
+                <button class="btn-cancel" onclick="toggleAdminMode(false)" style="margin-top: 10px; padding: 10px;">Выйти из панели</button>
+            </div>
+        </div>
 
-    function editItem(id, cat) {
-        const list = cat === 'privileges' ? privileges : services;
-        const item = list.find(i => i.id === id);
-        if (!item) return;
-
-        document.getElementById('editId').value = item.id;
-        document.getElementById('newProdName').value = item.name;
-        document.getElementById('newProdPrice').value = item.price;
-        document.getElementById('newProdCategory').value = cat;
-        document.getElementById('submitFormBtn').innerText = 'Обновить товар';
-        document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    function saveForm() {
-        const id = document.getElementById('editId').value;
-        const name = document.getElementById('newProdName').value.trim();
-        const price = parseInt(document.getElementById('newProdPrice').value);
-        const cat = document.getElementById('newProdCategory').value;
-
-        if (!name || isNaN(price) || price <= 0) {
-            alert('Пожалуйста, заполните корректно все поля формы.');
-            return;
-        }
-
-        // Очищаем старую копию при редактировании, чтобы предотвратить дублирование
-        if (id) {
-            const numId = parseInt(id);
-            privileges = privileges.filter(i => i.id !== numId);
-            services = services.filter(i => i.id !== numId);
-        }
-
-        const item = { id: id ? parseInt(id) : Date.now(), name, price };
-
-        if (cat === 'privileges') {
-            privileges.push(item);
-        } else {
-            services.push(item);
-        }
-
-        localStorage.setItem('p_list', JSON.stringify(privileges));
-        localStorage.setItem('s_list', JSON.stringify(services));
-
-        // Сброс состояния формы ввода
-        document.getElementById('editId').value = '';
-        document.getElementById('newProdName').value = '';
-        document.getElementById('newProdPrice').value = '';
-        document.getElementById('submitFormBtn').innerText = 'Сохранить товар';
-
-        render();
-        showToast();
-    }
-
-    function deleteItem(id, cat) {
-        if (!confirm('Вы действительно хотите удалить выбранный товар из списка?')) return;
-        
-        if (cat === 'privileges') {
-            privileges = privileges.filter(i => i.id !== id);
-        } else {
-            services = services.filter(i => i.id !== id);
-        }
-
-        localStorage.setItem('p_list', JSON.stringify(privileges));
-        localStorage.setItem('s_list', JSON.stringify(services));
-        render();
-    }
-
-    // ===== ОБРАБОТКА ПОКУПОК И ОКНА ОПЛАТЫ =====
-    function openModal(name, price) {
-        selectedProduct = { name, price };
-        document.getElementById('modalProductName').innerText = name;
-        document.getElementById('modalProductPrice').innerText = price + ' ₽';
-        document.getElementById('modalOverlay').classList.add('active');
-        document.getElementById('nicknameInput').focus();
-    }
-
-    function closeModal() {
-        document.getElementById('modalOverlay').classList.remove('active');
-        document.getElementById('nicknameInput').value = '';
-    }
-
-    function confirmPurchase() {
-        const nick = document.getElementById('nicknameInput').value.trim();
-        if (!nick) {
-            alert('Пожалуйста, введите ваш никнейм для выдачи товара.');
-            return;
-        }
-        
-        // Кодирование текстовых параметров комментария для URL ссылки DonatePay
-        const comment = encodeURIComponent(`${nick} | Товар: ${selectedProduct.name}`);
-        const finalUrl = `https://donatepay.ru{DONATE_ID}?amount=${selectedProduct.price}&comment=${comment}`;
-        
-        closeModal();
-        window.open(finalUrl, '_blank');
-    }
-
-    // ===== СИСТЕМНЫЕ ФУНКЦИИ И ОНЛАЙН СЕРВЕРА =====
-    function copyIP() {
-        navigator.clipboard.writeText(SERVER_IP).then(() => {
-            showToast();
-        }).catch(() => {
-            alert('Ошибка буфера. Скопируйте адрес вручную: ' + SERVER_IP);
-        });
-    }
-
-    function showToast() {
-        const t = document.getElementById('notification');
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
-    }
-
-    async function updateOnline() {
-        try {
-            const res = await fetch(`https://mcsrvstat.us{SERVER_IP}`);
-            const data = await res.json();
-            document.getElementById('onlineCount').innerText = data.online ? data.players.online : '0';
-        } catch {
-            document.getElementById('onlineCount').innerText = '0';
-        }
-    }
-
-    // Запуск процедур при полной готовности страницы
-    window.onload = function() {
-        render();
-        updateOnline();
-        setInterval(updateOnline, 30000); // Синхронизация онлайна каждые 30 секунд
-    };
-</script>
+        <!-- Витрина Привилегий -->
+        <div class="glass-card">
